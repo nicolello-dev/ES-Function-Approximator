@@ -15,15 +15,16 @@ def mse(predictions: List[float], targets: List[float]) -> float:
     Calculate the Mean Squared Error between predictions and targets.
 
     :param predictions: List of predicted values
-    :type predictions: list[float]
+    :type predictions: List[float]
     :param targets: List of target values
-    :type targets: list[float]
+    :type targets: List[float]
     :return: Mean Squared Error
     :rtype: float
     """
     if len(predictions) != len(targets):
         raise ValueError("Predictions and targets must have the same length.")
 
+    # \sum_{i=0}^{N}((p_i - t_i) ** 2) / N
     error = sum((p - t) ** 2 for p, t in zip(predictions, targets)) / len(predictions)
     return error
 
@@ -58,7 +59,7 @@ class Gene:
         self.mse = mse([self.f(self, i) for i in inputs], targets)
         return self.mse
 
-    def get_offsprings(self, n: int) -> list["Gene"]:
+    def get_offsprings(self, n: int) -> List["Gene"]:
         """
         Generates n offspring genes from this gene.
         Implements Gaussian mutation.
@@ -66,7 +67,7 @@ class Gene:
         :param n: Number of offspring genes to generate
         :type n: int
         :return: List of generated offspring genes
-        :rtype: list[Gene]
+        :rtype: List[Gene]
         """
         tau_1 = 1 / sqrt(2 * 3)
         r_sigma_1 = tau_1 * gauss(0, 1)
@@ -99,9 +100,9 @@ class GenePool:
 
     f: Callable[[Gene], float]
 
-    genes: list[Gene]
+    genes: List[Gene]
     current_iteration: int
-    previous_genes: list[Gene] | None
+    previous_genes: List[Gene] | None
 
     def __init__(
         self, n: int, data: List[Tuple[float, float]], f: Callable[[Gene], float]
@@ -121,18 +122,19 @@ class GenePool:
         self.inputs = [pair[0] for pair in data]
         self.targets = [pair[1] for pair in data]
         self.f = f
-        self.genes = GenePool.gen_genes(n, f)
+        self.genes = GenePool.generate_initial_genes(n, f)
         self.previous_genes = None
         self.current_iteration = 0
 
-    def gen_genes(n: int, f: Callable[[Gene], float]) -> list[Gene]:
+    @staticmethod
+    def generate_initial_genes(n: int, f: Callable[[Gene], float]) -> List[Gene]:
         """
         Generates a list of Gene objects with default parameters.
 
         :param n: Number of Gene objects to generate
         :type n: int
         :return: List of Gene objects
-        :rtype: list[Gene]
+        :rtype: List[Gene]
         """
         return [
             Gene(
@@ -147,29 +149,29 @@ class GenePool:
             for _ in range(n)
         ]
 
-    def select_genes(self, n: int, genes: list[Gene]) -> list[Gene]:
+    def select_best_n_genes(self, n: int, genes: List[Gene]) -> List[Gene]:
         """
         Selects the n best Gene objects from the provided list based on their evaluation (lower is better).
 
         :param n: Number of Gene objects to select
         :type n: int
         :param genes: List of Gene objects
-        :type genes: list[Gene]
+        :type genes: List[Gene]
         :return: List of selected Gene objects
-        :rtype: list[Gene]
+        :rtype: List[Gene]
         """
         sorted_genes = sorted(
             genes, key=lambda gene: gene.evaluate(self.inputs, self.targets)
         )
         return sorted_genes[:n]
 
-    def generate_offsprings_from_parents(self) -> list[Gene]:
+    def generate_offsprings_from_parents(self) -> List[Gene]:
         """
         Generates the offsprings from the parents.
 
         :param self: Description
         """
-        selected_genes = self.select_genes(CHILDREN_SIZE, self.genes)
+        selected_genes = self.select_best_n_genes(CHILDREN_SIZE, self.genes)
         offsprings = [
             offspring for gene in selected_genes for offspring in gene.get_offsprings(5)
         ]
@@ -202,7 +204,7 @@ class GenePool:
 
         :param self: Description
         """
-        offsprings = self.select_genes(
+        offsprings = self.select_best_n_genes(
             POPULATION_SIZE, self.generate_offsprings_from_parents()
         )
 
