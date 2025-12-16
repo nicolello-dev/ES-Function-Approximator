@@ -45,13 +45,9 @@ class Gene:
 
     mse: float | None = None
 
-    def _evaluate(self, i: float) -> float:
-        return self.a * (i**2 - self.b * cos(self.c * pi * i))
-
     def evaluate(self, inputs: List[float], targets: List[float]) -> float:
         """
-        :seealso: evaluate
-
+        Evaluates the gene's performance using Mean Squared Error (MSE).
         :param self: Description
         :param inputs: List of input values
         :param targets: List of target values
@@ -59,7 +55,7 @@ class Gene:
         """
         if self.mse is not None:
             return self.mse
-        self.mse = mse([self._evaluate(i) for i in inputs], targets)
+        self.mse = mse([self.f(self, i) for i in inputs], targets)
         return self.mse
 
     def get_offsprings(self, n: int) -> list["Gene"]:
